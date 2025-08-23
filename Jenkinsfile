@@ -99,7 +99,7 @@ pipeline {
             when {
                 branch 'develop'
             }
-            steps {
+            steps {//what is 
                 script {
                     echo 'Deploying to staging environment...'
                     // Add your staging deployment logic here
@@ -176,5 +176,5 @@ pipeline {
         }
         failure {
             echo 'Pipeline failed!'
-        }//What 
+        }
     }
