@@ -1,0 +1,29 @@
+# ngrok Configuration for Converto SaaS
+# This file configures ngrok tunnels and settings
+
+version: "2"
+authtoken: YOUR_NGROK_AUTHTOKEN_HERE  # Replace with your actual authtoken
+
+tunnels:
+  converto-app:
+    proto: http
+    addr: 3000
+    subdomain: converto-saas  # Optional: custom subdomain (requires paid plan)
+    inspect: true
+    log: stdout
+    log_level: info
+    
+  # Optional: API health check tunnel
+  converto-health:
+    proto: http
+    addr: 3000
+    path: /api/health
+    inspect: false
+    log: stdout
+    log_level: warn
+
+# Global settings
+console_ui: true
+log_level: info
+log_format: json
+log: stdout

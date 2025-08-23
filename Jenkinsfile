@@ -108,15 +108,49 @@ pipeline {
             }
         }
         
-        stage('Deploy to Production') {
+        stage('Deploy with ngrok') {
             when {
                 branch 'main'
             }
             steps {
                 script {
-                    echo 'Deploying to production environment...'
-                    // Add your production deployment logic here
-                    // Example: kubectl apply -f k8s/production/
+                    echo '🚀 Deploying with ngrok for live access...'
+                    
+                    // Build Docker image
+                    if (isUnix()) {
+                        sh "docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} ."
+                        sh "docker tag ${DOCKER_IMAGE}:${DOCKER_TAG} ${DOCKER_IMAGE}:latest"
+                        
+                        // Stop previous container
+                        sh "docker stop converto-live || true"
+                        sh "docker rm converto-live || true"
+                        
+                        // Run new container
+                        sh "docker run -d --name converto-live -p 3000:3000 ${DOCKER_IMAGE}:${DOCKER_TAG}"
+                        
+                        // Start ngrok tunnel
+                        sh "chmod +x scripts/ngrok-deploy.sh"
+                        sh "./scripts/ngrok-deploy.sh"
+                        
+                        // Get live URL
+                        sh "echo '🌐 Live URL:' && cat .ngrok_url || echo 'Failed to get ngrok URL'"
+                    } else {
+                        bat "docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} ."
+                        bat "docker tag ${DOCKER_IMAGE}:${DOCKER_TAG} ${DOCKER_IMAGE}:latest"
+                        
+                        // Stop previous container
+                        bat "docker stop converto-live || exit 0"
+                        bat "docker rm converto-live || exit 0"
+                        
+                        // Run new container
+                        bat "docker run -d --name converto-live -p 3000:3000 ${DOCKER_IMAGE}:${DOCKER_TAG}"
+                        
+                        // Start ngrok tunnel (PowerShell)
+                        bat "powershell -ExecutionPolicy Bypass -File scripts\\ngrok-deploy.ps1"
+                        
+                        // Get live URL
+                        bat "type .ngrok_url || echo Failed to get ngrok URL"
+                    }
                 }
             }
         }
