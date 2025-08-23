@@ -32,7 +32,14 @@ RUN apt-get update && \
     git \
     wget \
     unzip \
+    curl \
     && rm -rf /var/lib/apt/lists/*
+
+# Install Node.js
+RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - && \
+    apt-get update && \
+    apt-get install -y nodejs && \
+    rm -rf /var/lib/apt/lists/*
 
 # Create docker group and add jenkins user to it
 RUN groupadd -r docker && usermod -aG docker jenkins
