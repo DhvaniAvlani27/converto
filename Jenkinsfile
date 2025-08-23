@@ -169,12 +169,12 @@ pipeline {
                     bat "docker rmi ${DOCKER_IMAGE}:${DOCKER_TAG} || true"
                     bat "docker rmi ${DOCKER_IMAGE}:latest || true"
                 }
-            }//What 
+            }
         }
         success {
             echo 'Pipeline completed successfully!'
         }
         failure {
             echo 'Pipeline failed!'
-        }
+        }//What 
     }
