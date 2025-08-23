@@ -1,11 +1,28 @@
 #!/bin/bash
 
-# ngrok Deployment Script for Converto SaaS
+# ngrok Deployment Script for Converto SaaS (Linux/Mac)
 # This script manages ngrok tunnels for live deployment
+
+# Parse command line arguments
+PORT=3000
+
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --port|-p)
+            PORT="$2"
+            shift 2
+            ;;
+        *)
+            echo "Usage: $0 [--port PORT]"
+            echo "  --port, -p: Port to tunnel (default: 3000)"
+            exit 1
+            ;;
+    esac
+done
 
 set -e
 
-echo "🚀 Starting ngrok deployment..."
+echo "🚀 Starting ngrok deployment to port $PORT..."
 
 # Kill existing ngrok processes
 echo "🔄 Stopping existing ngrok tunnels..."
@@ -15,13 +32,13 @@ sleep 2
 # Check if Docker container is running
 if ! docker ps | grep -q "converto-live"; then
     echo "❌ Docker container 'converto-live' is not running!"
-    echo "Please ensure the container is running on port 3000"
+    echo "Please ensure the container is running on port $PORT"
     exit 1
 fi
 
 # Start new ngrok tunnel
-echo "🌐 Starting new ngrok tunnel..."
-ngrok http 3000 --log=stdout > ngrok.log 2>&1 &
+echo "🌐 Starting new ngrok tunnel to port $PORT..."
+ngrok http $PORT --log=stdout > ngrok.log 2>&1 &
 NGROK_PID=$!
 
 # Wait for tunnel to be ready
@@ -48,7 +65,7 @@ echo $NGROK_PID > .ngrok_pid
 # Display tunnel info
 echo "📊 Tunnel Information:"
 echo "   - Public URL: $PUBLIC_URL"
-echo "   - Local Port: 3000"
+echo "   - Local Port: $PORT"
 echo "   - Process ID: $NGROK_PID"
 echo "   - Log File: ngrok.log"
 echo "   - Status: Active"

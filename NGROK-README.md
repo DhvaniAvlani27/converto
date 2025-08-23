@@ -22,7 +22,15 @@ This guide explains how to deploy your Converto SaaS application to the internet
 
 #### **Windows:**
 ```powershell
-.\scripts\quick-deploy.ps1
+# Start both environments:
+.\scripts\manage-environments.ps1 -Start
+
+# Or start individually:
+.\scripts\manage-environments.ps1 -Development   # Port 3000
+.\scripts\manage-environments.ps1 -Production    # Port 4000 + ngrok
+
+# Check status:
+.\scripts\manage-environments.ps1 -Status
 
 # After deployment, easily access your app:
 .\scripts\display-url.ps1            # Show URL prominently
@@ -177,12 +185,18 @@ docker exec jenkins ./scripts/ngrok-manager.sh url
 
 ## 🌐 Accessing Your App
 
+### **Dual Environment Setup**
+- **🔧 Development**: `http://localhost:3000` (for development work)
+- **📱 Production**: `http://localhost:4000` (production build)
+- **🌐 Live Access**: `https://abc123.ngrok.io` (tunnels to production)
+
 ### **Local Access**
-- **URL**: `http://localhost:3000`
-- **Health Check**: `http://localhost:3000/api/health`
+- **Development**: `http://localhost:3000`
+- **Production**: `http://localhost:4000`
+- **Health Check**: `http://localhost:4000/api/health`
 
 ### **Public Access**
-- **URL**: `https://abc123.ngrok.io` (changes each time)
+- **URL**: `https://abc123.ngrok.io` (tunnels to port 4000)
 - **Health Check**: `https://abc123.ngrok.io/api/health`
 
 ### **ngrok Dashboard**

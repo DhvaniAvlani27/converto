@@ -61,6 +61,8 @@ Write-Host "🌐" -ForegroundColor $Cyan -NoNewline
 Write-Host " ==========================================" -ForegroundColor $White
 Write-Host "🚀 YOUR APP IS NOW LIVE ON THE INTERNET!" -ForegroundColor $Green
 Write-Host "🌐 ==========================================" -ForegroundColor $White
+Write-Host "📱 Production: Port 4000 (via ngrok)" -ForegroundColor $Yellow
+Write-Host "🔧 Development: Port 3000 (local)" -ForegroundColor $Blue
 Write-Host ""
 
 Write-URL "🔗 Public URL: $publicUrl"

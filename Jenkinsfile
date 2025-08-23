@@ -184,24 +184,30 @@ pipeline {
         stage('Always Deploy with ngrok') {
             steps {
                 script {
-                    echo '🚀 Always deploying with ngrok for live access...'
+                    echo '🚀 Always deploying with ngrok for live access on port 4000...'
                     echo "Current branch detected: ${env.BRANCH_NAME}"
+                    echo "Development will continue on port 3000"
+                    echo "Production will be deployed on port 4000"
                     
                     // Build Docker image
                     if (isUnix()) {
                         sh "docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} ."
                         sh "docker tag ${DOCKER_IMAGE}:${DOCKER_TAG} ${DOCKER_IMAGE}:latest"
                         
-                        // Stop previous container
+                        // Stop previous production container
                         sh "docker stop converto-live || true"
                         sh "docker rm converto-live || true"
                         
-                        // Run new container
-                        sh "docker run -d --name converto-live -p 3000:3000 ${DOCKER_IMAGE}:${DOCKER_TAG}"
+                        // Run new production container on port 4000
+                        sh "docker run -d --name converto-live -p 4000:3000 ${DOCKER_IMAGE}:${DOCKER_TAG}"
                         
-                        // Start ngrok tunnel
+                        // Wait for container to be ready
+                        sh "echo '⏳ Waiting for production container to be ready...'"
+                        sh "sleep 10"
+                        
+                        // Start ngrok tunnel to port 4000
                         sh "chmod +x scripts/ngrok-deploy.sh"
-                        sh "./scripts/ngrok-deploy.sh"
+                        sh "./scripts/ngrok-deploy.sh --port 4000"
                         
                         // Get live URL and display prominently
                         sh "echo '🌐 Live URL:' && cat .ngrok_url || echo 'Failed to get ngrok URL'"
@@ -210,15 +216,19 @@ pipeline {
                         bat "docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} ."
                         bat "docker tag ${DOCKER_IMAGE}:${DOCKER_TAG} ${DOCKER_IMAGE}:latest"
                         
-                        // Stop previous container
+                        // Stop previous production container
                         bat "docker stop converto-live || exit 0"
                         bat "docker rm converto-live || exit 0"
                         
-                        // Run new container
-                        bat "docker run -d --name converto-live -p 3000:3000 ${DOCKER_IMAGE}:${DOCKER_TAG}"
+                        // Run new production container on port 4000
+                        bat "docker run -d --name converto-live -p 4000:3000 ${DOCKER_IMAGE}:${DOCKER_TAG}"
                         
-                        // Start ngrok tunnel (PowerShell)
-                        bat "powershell -ExecutionPolicy Bypass -File scripts\\ngrok-deploy.ps1"
+                        // Wait for container to be ready
+                        bat "echo ⏳ Waiting for production container to be ready..."
+                        bat "timeout /t 10 /nobreak"
+                        
+                        // Start ngrok tunnel to port 4000
+                        bat "powershell -ExecutionPolicy Bypass -File scripts\\ngrok-deploy.ps1 -Port 4000"
                         
                         // Get live URL and display prominently
                         bat "type .ngrok_url || echo Failed to get ngrok URL"

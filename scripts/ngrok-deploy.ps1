@@ -4,7 +4,8 @@
 param(
     [switch]$Stop,
     [switch]$Status,
-    [switch]$Health
+    [switch]$Health,
+    [int]$Port = 3000
 )
 
 Write-Host "🚀 ngrok Deployment Script for Windows" -ForegroundColor Green
@@ -58,12 +59,13 @@ function Start-Ngrok {
     $containerStatus = docker ps --filter "name=converto-live" --format "table {{.Names}}\t{{.Status}}" 2>$null
     if ($containerStatus -notlike "*converto-live*") {
         Write-Host "❌ Docker container 'converto-live' is not running!" -ForegroundColor Red
-        Write-Host "Please ensure the container is running on port 3000" -ForegroundColor Yellow
+        Write-Host "Please ensure the container is running on port $Port" -ForegroundColor Yellow
         exit 1
     }
     
     # Start ngrok
-    Start-Process -FilePath "ngrok" -ArgumentList "http 3000" -WindowStyle Hidden
+    Write-Host "🌐 Starting ngrok tunnel to port $Port..." -ForegroundColor Yellow
+    Start-Process -FilePath "ngrok" -ArgumentList "http $Port" -WindowStyle Hidden
     $ngrokProcess = Get-Process -Name "ngrok" | Select-Object -First 1
     
     # Wait for tunnel to be ready
@@ -89,7 +91,7 @@ function Start-Ngrok {
     # Display tunnel info
     Write-Host "📊 Tunnel Information:" -ForegroundColor Blue
     Write-Host "   - Public URL: $($tunnelInfo.PublicUrl)" -ForegroundColor White
-    Write-Host "   - Local Port: 3000" -ForegroundColor White
+            Write-Host "   - Local Port: $Port" -ForegroundColor White
     Write-Host "   - Process ID: $($ngrokProcess.Id)" -ForegroundColor White
     Write-Host "   - Status: Active" -ForegroundColor White
     

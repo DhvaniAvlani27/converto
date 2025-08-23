@@ -53,6 +53,8 @@ echo ""
 echo -e "${CYAN}🌐${NC}${WHITE} ==========================================${NC}"
 echo -e "${GREEN}🚀 YOUR APP IS NOW LIVE ON THE INTERNET!${NC}"
 echo -e "${CYAN}🌐${NC}${WHITE} ==========================================${NC}"
+echo -e "${YELLOW}📱 Production: Port 4000 (via ngrok)${NC}"
+echo -e "${BLUE}🔧 Development: Port 3000 (local)${NC}"
 echo ""
 
 print_url "🔗 Public URL: $public_url"
