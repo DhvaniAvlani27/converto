@@ -161,7 +161,7 @@ pipeline {
     post {
         always {
             script {
-                // Clean up Docker images
+                // Clean up Docker 
                 if (isUnix()) {
                     sh "docker rmi ${DOCKER_IMAGE}:${DOCKER_TAG} || true"
                     sh "docker rmi ${DOCKER_IMAGE}:latest || true"
@@ -177,5 +177,5 @@ pipeline {
         failure {
             echo 'Pipeline failed!'
         }
-    }
+    }//What 
 }
