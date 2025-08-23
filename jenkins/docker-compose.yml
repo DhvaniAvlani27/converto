@@ -18,6 +18,12 @@ services:
       - JENKINS_OPTS=--prefix=/jenkins
     networks:
       - jenkins_network
+    command: >
+      bash -c "
+        curl -fsSL https://deb.nodesource.com/setup_18.x | bash - &&
+        apt-get update && apt-get install -y nodejs &&
+        /usr/bin/tini -- /usr/local/bin/jenkins.sh
+      "
 
   jenkins-agent:
     image: jenkins/inbound-agent:latest
