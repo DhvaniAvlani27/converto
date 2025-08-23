@@ -58,7 +58,7 @@ function Show-Usage {
     Write-Host "Ports:" -ForegroundColor $White
     Write-Host "  🔧 Development: http://localhost:3000" -ForegroundColor $Blue
     Write-Host "  📱 Production:  http://localhost:4000" -ForegroundColor $Yellow
-    Write-Host "  🌐 ngrok:       Check .ngrok_url file" -ForegroundColor $Cyan
+            Write-Host "  📱 Production:  http://localhost:4000" -ForegroundColor $Yellow
 }
 
 function Start-Development {
@@ -100,15 +100,10 @@ function Start-Production {
         # Wait for container to be ready
         Start-Sleep -Seconds 10
         
-        # Start ngrok tunnel
-        Write-Info "Starting ngrok tunnel to production..."
-        & ".\scripts\ngrok-deploy.ps1" -Port 4000
-        
-        if (Test-Path ".ngrok_url") {
-            $publicUrl = Get-Content ".ngrok_url"
-            Write-Status "ngrok tunnel established!"
-            Write-URL "Public URL: $publicUrl"
-        }
+        # Production is now running on localhost:4000
+        Write-Status "Production environment started on port 4000"
+        Write-Info "Access at: http://localhost:4000"
+        Write-Info "No ngrok tunnel needed - app is accessible locally"
     } catch {
         Write-Error "Failed to start production environment: $($_.Exception.Message)"
     }
@@ -126,12 +121,8 @@ function Stop-Production {
     docker stop converto-live 2>$null
     docker rm converto-live 2>$null
     
-    # Stop ngrok
-    Get-Process -Name "ngrok" -ErrorAction SilentlyContinue | Stop-Process -Force
-    
-    # Clean up files
-    if (Test-Path ".ngrok_pid") { Remove-Item ".ngrok_pid" -Force }
-    if (Test-Path ".ngrok_url") { Remove-Item ".ngrok_url" -Force }
+            # Production stopped
+        Write-Status "Production environment stopped"
     
     Write-Status "Production environment stopped"
 }
@@ -156,14 +147,9 @@ function Show-Status {
         Write-Status "📱 Production: Running on port 4000"
         Write-Info "   Local: http://localhost:4000"
         
-        # ngrok status
-        if (Test-Path ".ngrok_url") {
-            $publicUrl = Get-Content ".ngrok_url"
-            Write-Status "🌐 ngrok: Active"
-            Write-URL "   Public: $publicUrl"
-        } else {
-            Write-Warning "🌐 ngrok: Not active"
-        }
+        # Production status
+        Write-Status "📱 Production: Running on port 4000"
+        Write-Info "   Local: http://localhost:4000"
     } else {
         Write-Warning "📱 Production: Not running"
     }
@@ -172,10 +158,7 @@ function Show-Status {
     Write-Host "💡 Quick Access:" -ForegroundColor $Yellow
     Write-Host "  Development: http://localhost:3000" -ForegroundColor $White
     Write-Host "  Production:  http://localhost:4000" -ForegroundColor $White
-    if (Test-Path ".ngrok_url") {
-        $publicUrl = Get-Content ".ngrok_url"
-        Write-Host "  Live URL:   $publicUrl" -ForegroundColor $White
-    }
+            Write-Host "  Production:  http://localhost:4000" -ForegroundColor $White
 }
 
 # Main execution

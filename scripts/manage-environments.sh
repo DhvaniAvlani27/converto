@@ -87,18 +87,10 @@ start_production() {
         echo "⏳ Waiting for container to be ready..."
         sleep 10
         
-        # Start ngrok tunnel
-        print_info "Starting ngrok tunnel to production..."
-        if [ -f "scripts/ngrok-deploy.sh" ]; then
-            chmod +x scripts/ngrok-deploy.sh
-            ./scripts/ngrok-deploy.sh --port 4000
-            
-            if [ -f ".ngrok_url" ]; then
-                public_url=$(cat .ngrok_url)
-                print_status "ngrok tunnel established!"
-                print_url "Public URL: $public_url"
-            fi
-        fi
+        # Production is now running on localhost:4000
+        print_status "Production environment started on port 4000"
+        print_info "Access at: http://localhost:4000"
+        print_info "No ngrok tunnel needed - app is accessible locally"
     else
         print_error "Failed to start production environment"
     fi
@@ -116,11 +108,8 @@ stop_production() {
     docker stop converto-live 2>/dev/null || true
     docker rm converto-live 2>/dev/null || true
     
-    # Stop ngrok
-    pkill ngrok || true
-    
-    # Clean up files
-    rm -f .ngrok_pid .ngrok_url
+    # Production stopped
+    print_status "Production environment stopped"
     
     print_status "Production environment stopped"
 }
@@ -143,14 +132,9 @@ show_status() {
         print_status "📱 Production: Running on port 4000"
         print_info "   Local: http://localhost:4000"
         
-        # ngrok status
-        if [ -f ".ngrok_url" ]; then
-            public_url=$(cat .ngrok_url)
-            print_status "🌐 ngrok: Active"
-            print_url "   Public: $public_url"
-        else
-            print_warning "🌐 ngrok: Not active"
-        fi
+        # Production status
+        print_status "📱 Production: Running on port 4000"
+        print_info "   Local: http://localhost:4000"
     else
         print_warning "📱 Production: Not running"
     fi
@@ -159,10 +143,7 @@ show_status() {
     echo -e "${YELLOW}💡 Quick Access:${NC}"
     echo -e "${WHITE}  Development: http://localhost:3000${NC}"
     echo -e "${WHITE}  Production:  http://localhost:4000${NC}"
-    if [ -f ".ngrok_url" ]; then
-        public_url=$(cat .ngrok_url)
-        echo -e "${WHITE}  Live URL:   $public_url${NC}"
-    fi
+            echo -e "${WHITE}  Production:  http://localhost:4000${NC}"
 }
 
 # Parse command line arguments

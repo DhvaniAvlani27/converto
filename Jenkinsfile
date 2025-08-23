@@ -67,13 +67,14 @@ pipeline {
                     echo 'Running tests...'
                     // npm test
                     
-                    // Test ngrok functionality
-                    echo '🧪 Testing ngrok setup...'
+                    // Test Docker functionality
+                    echo '🧪 Testing Docker setup...'
                     if (isUnix()) {
-                        sh "chmod +x scripts/test-ngrok.sh"
-                        sh "./scripts/test-ngrok.sh"
+                        sh "docker --version"
+                        sh "docker ps"
                     } else {
-                        bat "powershell -ExecutionPolicy Bypass -File scripts\\test-ngrok.ps1"
+                        bat "docker --version"
+                        bat "docker ps"
                     }
                 }
             }
@@ -127,64 +128,10 @@ pipeline {
             }
         }
         
-        stage('Deploy with ngrok') {
-            when {
-                anyOf {
-                    branch 'main'
-                    branch 'master'
-                    branch 'mainline'
-                    expression { env.BRANCH_NAME == 'main' || env.BRANCH_NAME == 'master' }
-                }
-            }
+        stage('Deploy to Production') {
             steps {
                 script {
-                    echo '🚀 Deploying with ngrok for live access...'
-                    
-                    // Build Docker image
-                    if (isUnix()) {
-                        sh "docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} ."
-                        sh "docker tag ${DOCKER_IMAGE}:${DOCKER_TAG} ${DOCKER_IMAGE}:latest"
-                        
-                        // Stop previous container
-                        sh "docker stop converto-live || true"
-                        sh "docker rm converto-live || true"
-                        
-                        // Run new container
-                        sh "docker run -d --name converto-live -p 3000:3000 ${DOCKER_IMAGE}:${DOCKER_TAG}"
-                        
-                        // Start ngrok tunnel
-                        sh "chmod +x scripts/ngrok-deploy.sh"
-                        sh "./scripts/ngrok-deploy.sh"
-                        
-                        // Get live URL and display prominently
-                        sh "echo '🌐 Live URL:' && cat .ngrok_url || echo 'Failed to get ngrok URL'"
-                        sh "echo '🚀 DISPLAYING LIVE URL:' && ./scripts/display-url.sh || echo 'Display script not available'"
-                    } else {
-                        bat "docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} ."
-                        bat "docker tag ${DOCKER_IMAGE}:${DOCKER_TAG} ${DOCKER_IMAGE}:latest"
-                        
-                        // Stop previous container
-                        bat "docker stop converto-live || exit 0"
-                        bat "docker rm converto-live || exit 0"
-                        
-                        // Run new container
-                        bat "docker run -d --name converto-live -p 3000:3000 ${DOCKER_IMAGE}:${DOCKER_TAG}"
-                        
-                        // Start ngrok tunnel (PowerShell)
-                        bat "powershell -ExecutionPolicy Bypass -File scripts\\ngrok-deploy.ps1"
-                        
-                        // Get live URL and display prominently
-                        bat "type .ngrok_url || echo Failed to get ngrok URL"
-                        bat "echo 🚀 DISPLAYING LIVE URL: && powershell -ExecutionPolicy Bypass -File scripts\\display-url.ps1 || echo Display script not available"
-                    }
-                }
-            }
-        }
-        
-        stage('Always Deploy with ngrok') {
-            steps {
-                script {
-                    echo '🚀 Always deploying with ngrok for live access on port 4000...'
+                    echo '🚀 Deploying to production on localhost:4000...'
                     echo "Current branch detected: ${env.BRANCH_NAME}"
                     echo "Development will continue on port 3000"
                     echo "Production will be deployed on port 4000"
@@ -205,13 +152,15 @@ pipeline {
                         sh "echo '⏳ Waiting for production container to be ready...'"
                         sh "sleep 10"
                         
-                        // Start ngrok tunnel to port 4000
-                        sh "chmod +x scripts/ngrok-deploy.sh"
-                        sh "./scripts/ngrok-deploy.sh --port 4000"
-                        
-                        // Get live URL and display prominently
-                        sh "echo '🌐 Live URL:' && cat .ngrok_url || echo 'Failed to get ngrok URL'"
-                        sh "echo '🚀 DISPLAYING LIVE URL:' && ./scripts/display-url.sh || echo 'Display script not available'"
+                        // Display production URL prominently
+                        sh "echo ''"
+                        sh "echo '🎉 PRODUCTION DEPLOYMENT COMPLETE!'"
+                        sh "echo '====================================='"
+                        sh "echo '🌐 Production URL: http://localhost:4000'"
+                        sh "echo '🔗 Health Check: http://localhost:4000/api/health'"
+                        sh "echo '📱 Your app is now running on port 4000!'"
+                        sh "echo '====================================='"
+                        sh "echo ''"
                     } else {
                         bat "docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} ."
                         bat "docker tag ${DOCKER_IMAGE}:${DOCKER_TAG} ${DOCKER_IMAGE}:latest"
@@ -227,12 +176,15 @@ pipeline {
                         bat "echo ⏳ Waiting for production container to be ready..."
                         bat "timeout /t 10 /nobreak"
                         
-                        // Start ngrok tunnel to port 4000
-                        bat "powershell -ExecutionPolicy Bypass -File scripts\\ngrok-deploy.ps1 -Port 4000"
-                        
-                        // Get live URL and display prominently
-                        bat "type .ngrok_url || echo Failed to get ngrok URL"
-                        bat "echo 🚀 DISPLAYING LIVE URL: && powershell -ExecutionPolicy Bypass -File scripts\\display-url.ps1 || echo Display script not available"
+                        // Display production URL prominently
+                        bat "echo."
+                        bat "echo 🎉 PRODUCTION DEPLOYMENT COMPLETE!"
+                        bat "echo =====================================
+                        bat "echo 🌐 Production URL: http://localhost:4000
+                        bat "echo 🔗 Health Check: http://localhost:4000/api/health
+                        bat "echo 📱 Your app is now running on port 4000!
+                        bat "echo =====================================
+                        bat "echo."
                     }
                 }
             }
