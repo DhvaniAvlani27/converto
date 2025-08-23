@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  jenkins:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: jenkins-custom
+    restart: unless-stopped
+    privileged: true
+    user: root
+    ports:
+      - "8080:8080"
+      - "50000:50000"
+    volumes:
+      - jenkins_home:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /usr/bin/docker:/usr/bin/docker
+      - /usr/lib/x86_64-linux-gnu/libapparmor.so.1:/usr/lib/x86_64-linux-gnu/libapparmor.so.1
+    environment:
+      - JENKINS_OPTS=--prefix=/jenkins
+      - DOCKER_HOST=unix:///var/run/docker.sock
+    networks:
+      - jenkins_network
+
+volumes:
+  jenkins_home:
+    driver: local
+
+networks:
+  jenkins_network:
+    driver: bridge
