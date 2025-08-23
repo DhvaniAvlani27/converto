@@ -5,12 +5,22 @@ pipeline {
         DOCKER_IMAGE = 'converto-saas'
         DOCKER_TAG = "${env.BUILD_NUMBER}"
         DOCKER_REGISTRY = 'your-registry.com' // Change this to your Docker registry
+        BRANCH_NAME = "${env.BRANCH_NAME ?: env.GIT_BRANCH ?: 'main'}"
     }
     
     stages {
         stage('Checkout') {
             steps {
                 checkout scm
+                script {
+                    echo "🔍 Debug Information:"
+                    echo "Current branch: ${env.BRANCH_NAME}"
+                    echo "Git branch: ${env.GIT_BRANCH}"
+                    echo "Build branch: ${env.BUILD_BRANCH}"
+                    echo "Workspace: ${env.WORKSPACE}"
+                    sh 'git branch -a'
+                    sh 'git log --oneline -1'
+                }
             }
         }
         
@@ -56,6 +66,15 @@ pipeline {
                     // Add your test commands here
                     echo 'Running tests...'
                     // npm test
+                    
+                    // Test ngrok functionality
+                    echo '🧪 Testing ngrok setup...'
+                    if (isUnix()) {
+                        sh "chmod +x scripts/test-ngrok.sh"
+                        sh "./scripts/test-ngrok.sh"
+                    } else {
+                        bat "powershell -ExecutionPolicy Bypass -File scripts\\test-ngrok.ps1"
+                    }
                 }
             }
         }
@@ -110,7 +129,12 @@ pipeline {
         
         stage('Deploy with ngrok') {
             when {
-                branch 'main'
+                anyOf {
+                    branch 'main'
+                    branch 'master'
+                    branch 'mainline'
+                    expression { env.BRANCH_NAME == 'main' || env.BRANCH_NAME == 'master' }
+                }
             }
             steps {
                 script {
@@ -132,8 +156,9 @@ pipeline {
                         sh "chmod +x scripts/ngrok-deploy.sh"
                         sh "./scripts/ngrok-deploy.sh"
                         
-                        // Get live URL
+                        // Get live URL and display prominently
                         sh "echo '🌐 Live URL:' && cat .ngrok_url || echo 'Failed to get ngrok URL'"
+                        sh "echo '🚀 DISPLAYING LIVE URL:' && ./scripts/display-url.sh || echo 'Display script not available'"
                     } else {
                         bat "docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} ."
                         bat "docker tag ${DOCKER_IMAGE}:${DOCKER_TAG} ${DOCKER_IMAGE}:latest"
@@ -148,8 +173,56 @@ pipeline {
                         // Start ngrok tunnel (PowerShell)
                         bat "powershell -ExecutionPolicy Bypass -File scripts\\ngrok-deploy.ps1"
                         
-                        // Get live URL
+                        // Get live URL and display prominently
                         bat "type .ngrok_url || echo Failed to get ngrok URL"
+                        bat "echo 🚀 DISPLAYING LIVE URL: && powershell -ExecutionPolicy Bypass -File scripts\\display-url.ps1 || echo Display script not available"
+                    }
+                }
+            }
+        }
+        
+        stage('Always Deploy with ngrok') {
+            steps {
+                script {
+                    echo '🚀 Always deploying with ngrok for live access...'
+                    echo "Current branch detected: ${env.BRANCH_NAME}"
+                    
+                    // Build Docker image
+                    if (isUnix()) {
+                        sh "docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} ."
+                        sh "docker tag ${DOCKER_IMAGE}:${DOCKER_TAG} ${DOCKER_IMAGE}:latest"
+                        
+                        // Stop previous container
+                        sh "docker stop converto-live || true"
+                        sh "docker rm converto-live || true"
+                        
+                        // Run new container
+                        sh "docker run -d --name converto-live -p 3000:3000 ${DOCKER_IMAGE}:${DOCKER_TAG}"
+                        
+                        // Start ngrok tunnel
+                        sh "chmod +x scripts/ngrok-deploy.sh"
+                        sh "./scripts/ngrok-deploy.sh"
+                        
+                        // Get live URL and display prominently
+                        sh "echo '🌐 Live URL:' && cat .ngrok_url || echo 'Failed to get ngrok URL'"
+                        sh "echo '🚀 DISPLAYING LIVE URL:' && ./scripts/display-url.sh || echo 'Display script not available'"
+                    } else {
+                        bat "docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} ."
+                        bat "docker tag ${DOCKER_IMAGE}:${DOCKER_TAG} ${DOCKER_IMAGE}:latest"
+                        
+                        // Stop previous container
+                        bat "docker stop converto-live || exit 0"
+                        bat "docker rm converto-live || exit 0"
+                        
+                        // Run new container
+                        bat "docker run -d --name converto-live -p 3000:3000 ${DOCKER_IMAGE}:${DOCKER_TAG}"
+                        
+                        // Start ngrok tunnel (PowerShell)
+                        bat "powershell -ExecutionPolicy Bypass -File scripts\\ngrok-deploy.ps1"
+                        
+                        // Get live URL and display prominently
+                        bat "type .ngrok_url || echo Failed to get ngrok URL"
+                        bat "echo 🚀 DISPLAYING LIVE URL: && powershell -ExecutionPolicy Bypass -File scripts\\display-url.ps1 || echo Display script not available"
                     }
                 }
             }

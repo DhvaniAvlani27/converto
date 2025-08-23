@@ -23,6 +23,11 @@ This guide explains how to deploy your Converto SaaS application to the internet
 #### **Windows:**
 ```powershell
 .\scripts\quick-deploy.ps1
+
+# After deployment, easily access your app:
+.\scripts\display-url.ps1            # Show URL prominently
+.\scripts\auto-open.ps1              # Auto-open in browser
+.\scripts\create-shortcut.ps1        # Create desktop shortcut
 ```
 
 #### **Linux/Mac:**
@@ -94,6 +99,17 @@ Advanced management with commands:
 ./scripts/ngrok-manager.sh health    # Health check
 ./scripts/ngrok-manager.sh logs      # Show logs
 ./scripts/ngrok-manager.sh url       # Get public URL
+```
+
+### **Display & Auto-Open Scripts**
+Easy access to your live app:
+```bash
+./scripts/display-url.sh             # Show URL prominently
+./scripts/display-url.sh --save      # Save as clickable HTML
+./scripts/display-url.sh --copy      # Copy URL to clipboard
+./scripts/display-url.sh --open      # Open in browser
+./scripts/auto-open.sh               # Auto-open app in browser
+./scripts/auto-open.sh --wait        # Wait before opening
 ```
 
 ## 🔧 Configuration

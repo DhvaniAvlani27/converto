@@ -198,3 +198,5 @@ Write-Host "  Stop app: docker stop converto-live" -ForegroundColor $White
 Write-Host "  Restart: .\scripts\quick-deploy.ps1" -ForegroundColor $White
 Write-Host "  Stop: .\scripts\quick-deploy.ps1 -Stop" -ForegroundColor $White
 Write-Host "  Status: .\scripts\quick-deploy.ps1 -Status" -ForegroundColor $White
+Write-Host "  Auto-open: .\scripts\auto-open.ps1" -ForegroundColor $White
+Write-Host "  Display URL: .\scripts\display-url.ps1" -ForegroundColor $White
