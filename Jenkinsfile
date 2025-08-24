@@ -178,3 +178,4 @@ pipeline {
             echo 'Pipeline failed!'
         }
     }
+}
