@@ -1,9 +1,9 @@
 /** @type {import('next').NextConfig} */
-const nextConfig = {
+const nextConfig = { //What is this 
   output: 'standalone',
   experimental: {
     outputFileTracingRoot: undefined,
   },
 };
 
-export default nextConfig;
+export default nextConfig;    
