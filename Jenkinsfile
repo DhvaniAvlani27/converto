@@ -80,11 +80,9 @@ pipeline {
         }
         
         stage('Push to Registry') {
-            when {
-                branch 'main'
-            }
             steps {
                 script {
+                    echo '📦 Pushing to Docker Registry...'
                     if (isUnix()) {
                         sh "docker tag ${DOCKER_IMAGE}:${DOCKER_TAG} ${DOCKER_REGISTRY}/${DOCKER_IMAGE}:${DOCKER_TAG}"
                         sh "docker tag ${DOCKER_IMAGE}:${DOCKER_TAG} ${DOCKER_REGISTRY}/${DOCKER_IMAGE}:latest"
@@ -101,35 +99,65 @@ pipeline {
         }
         
         stage('Deploy to Staging') {
-            when {
-                branch 'develop'
-            }
             steps {
                 script {
-                    echo 'Deploying to staging environment...'
-                    // Add your staging deployment logic here
-                    // Example: kubectl apply -f k8s/staging/
+                    echo '🚀 Deploying to staging environment...'
+                    if (isUnix()) {
+                        // Deploy to staging with Kubernetes
+                        sh "kubectl apply -f k8s/deployment.yaml"
+                        sh "kubectl rollout status deployment/converto-saas"
+                        sh "echo '✅ Staging deployment completed!'"
+                    } else {
+                        // Deploy to staging with Docker
+                        bat "docker run -d --name converto-staging --restart unless-stopped -p 3001:3000 ${DOCKER_IMAGE}:${DOCKER_TAG}"
+                        bat "echo '✅ Staging deployment completed on port 3001!'"
+                    }
+                }
+            }
+        }
+        
+        stage('Deploy to Production') {
+            steps {
+                script {
+                    echo '🚀 Deploying to production environment...'
+                    if (isUnix()) {
+                        // Force stop and remove previous production container
+                        sh "docker stop converto-prod || true"
+                        sh "docker rm converto-prod || true"
+                        
+                        // Run production container on port 4000
+                        sh "docker run -d --name converto-prod --restart unless-stopped -p 4000:3000 ${DOCKER_IMAGE}:${DOCKER_TAG}"
+                        
+                        // Wait for container to be ready
+                        sh "sleep 10"
+                        sh "docker logs converto-prod"
+                        sh "echo '✅ Production deployment completed on port 4000!'"
+                    } else {
+                        // Force stop and remove previous production container
+                        bat "docker stop converto-prod || exit 0"
+                        bat "docker rm converto-prod || exit 0"
+                        
+                        // Run production container on port 4000
+                        bat "docker run -d --name converto-prod --restart unless-stopped -p 4000:3000 ${DOCKER_IMAGE}:${DOCKER_TAG}"
+                        
+                        // Wait for container to be ready
+                        bat "timeout /t 10 /nobreak"
+                        bat "docker logs converto-prod"
+                        bat "echo '✅ Production deployment completed on port 4000!'"
+                    }
                 }
             }
         }
         
         stage('Deploy with ngrok') {
-            when {
-                branch 'main'
-            }
             steps {
                 script {
-                    echo '🚀 Deploying with ngrok for live access...'
+                    echo '🌐 Deploying with ngrok for public access...'
                     
-                    // Build Docker image
+                    // Force stop and remove previous ngrok container
                     if (isUnix()) {
-                        sh "docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} ."
-                        sh "docker tag ${DOCKER_IMAGE}:${DOCKER_TAG} ${DOCKER_IMAGE}:latest"
-                        
-                        // Force stop and remove previous container
                         sh "docker stop converto-live || true"
                         sh "docker rm converto-live || true"
-                        sh "docker rmi ${DOCKER_IMAGE}:latest || true"
                         
                         // Run new container with restart policy
                         sh "docker run -d --name converto-live --restart unless-stopped -p 3000:3000 ${DOCKER_IMAGE}:${DOCKER_TAG}"
@@ -146,13 +174,8 @@ pipeline {
                         sh "echo '🌐 Live URL:' && cat .ngrok_url || echo 'Failed to get ngrok URL'"
                         sh "echo '🚀 DISPLAYING LIVE URL:' && ./scripts/display-url.sh || echo 'Display script not available'"
                     } else {
-                        bat "docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} ."
-                        bat "docker tag ${DOCKER_IMAGE}:${DOCKER_TAG} ${DOCKER_IMAGE}:latest"
-                        
-                        // Force stop and remove previous container
                         bat "docker stop converto-live || exit 0"
                         bat "docker rm converto-live || exit 0"
-                        bat "docker rmi ${DOCKER_IMAGE}:latest || exit 0"
                         
                         // Run new container with restart policy
                         bat "docker run -d --name converto-live --restart unless-stopped -p 3000:3000 ${DOCKER_IMAGE}:${DOCKER_TAG}"
