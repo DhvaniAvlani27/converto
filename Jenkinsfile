@@ -77,39 +77,28 @@ pipeline {
         }
         
         stage('Deploy to Production') {
-    steps {
-        script {
-            echo '🚀 Deploying to production environment...'
-
-            if (isUnix()) {
-                // Stop & remove old container safely
-                sh "docker ps -a -q --filter name=converto-prod | xargs -r docker stop"
-                sh "docker ps -a -q --filter name=converto-prod | xargs -r docker rm"
-                
-                // Run container on free port (change 6000 if needed)
-                sh "docker run -d --name converto-prod --restart unless-stopped -p 6000:3000 ${DOCKER_IMAGE}:${DOCKER_TAG}"
-                sh "sleep 10"
-                sh "docker logs converto-prod"
-                sh "echo '✅ Production deployment completed on port 6000!'"
-            } else {
-                // Windows PowerShell version
-                powershell """
-                    # Stop & remove old container if exists
-                    \$c = docker ps -a -q -f name=converto-prod
-                    if (\$c) { docker stop \$c; docker rm \$c }
-
-                    # Run new container on port 6000
-                    docker run -d --name converto-prod --restart unless-stopped -p 6000:3000 ${DOCKER_IMAGE}:${DOCKER_TAG}
-
-                    Start-Sleep -Seconds 10
-                    docker logs converto-prod
-                    Write-Host '✅ Production deployment completed on port 6000!'
-                """
+            steps {
+                script {
+                    echo '🚀 Deploying to production environment...'
+                    if (isUnix()) {
+                        sh "docker stop converto-prod || true"
+                        sh "docker rm converto-prod || true"
+                        sh "docker run -d --name converto-prod --restart unless-stopped -p 4000:3000 ${DOCKER_IMAGE}:${DOCKER_TAG}"
+                        sh "sleep 10"
+                        sh "docker logs converto-prod"
+                        sh "echo '✅ Production deployment completed on port 4000!'"
+                    } else {
+                        bat "docker stop converto-prod || exit 0"
+                        bat "docker rm converto-prod || exit 0"
+                        bat "docker run -d --name converto-prod --restart unless-stopped -p 4000:3000 ${DOCKER_IMAGE}:${DOCKER_TAG}"
+                        bat "timeout /t 10 /nobreak"
+                        bat "docker logs converto-prod"
+                        bat "echo '✅ Production deployment completed on port 4000!'"
+                    }
+                }
             }
         }
     }
-}
-
     
     post {
         always {
