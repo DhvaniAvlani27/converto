@@ -14,7 +14,7 @@ import { z } from "zod";
 import { HiLockOpen } from "react-icons/hi";
 import Header from "../header";
 
-const ConvertToPdf = () => {
+const ConvertToWord = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const firstPdfFileName = useRef<string>("");
