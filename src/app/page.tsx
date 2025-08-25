@@ -10,7 +10,7 @@ const HomePage: React.FC = () => {
       <Header />
       <div className="flex flex-grow justify-center items-center">
         <div className="text-center p-6 bg-white shadow-xl rounded-lg">
-          <h1 className="text-4xl font-bold text-gray-800 mb-6">Convert Image to PDF</h1>
+          <h1 className="text-4xl font-bold text-gray-800 mb-6">Convert Image to Word</h1>
           <UploadInput />
         </div>
       </div>
