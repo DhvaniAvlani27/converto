@@ -38,12 +38,15 @@ pipeline {
             }
         }
         
-        stage('Build') {
+        stage('Clean') {
             steps {
                 script {
                     if (isUnix()) {
+                        sh 'rm -rf .next node_modules/.cache'
                         sh 'npm run build'
                     } else {
+                        bat 'if exist .next rmdir /s /q .next'
+                        bat 'if exist node_modules\\.cache rmdir /s /q node_modules\\.cache'
                         bat 'npm run build'
                     }
                 }
@@ -64,10 +67,12 @@ pipeline {
             steps {
                 script {
                     if (isUnix()) {
-                        sh "docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} ."
+                        // Force clean build without cache
+                        sh "docker build --no-cache -t ${DOCKER_IMAGE}:${DOCKER_TAG} ."
                         sh "docker tag ${DOCKER_IMAGE}:${DOCKER_TAG} ${DOCKER_IMAGE}:latest"
                     } else {
-                        bat "docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} ."
+                        // Force clean build without cache
+                        bat "docker build --no-cache -t ${DOCKER_IMAGE}:${DOCKER_TAG} ."
                         bat "docker tag ${DOCKER_IMAGE}:${DOCKER_TAG} ${DOCKER_IMAGE}:latest"
                     }
                 }
@@ -121,12 +126,17 @@ pipeline {
                         sh "docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} ."
                         sh "docker tag ${DOCKER_IMAGE}:${DOCKER_TAG} ${DOCKER_IMAGE}:latest"
                         
-                        // Stop previous container
+                        // Force stop and remove previous container
                         sh "docker stop converto-live || true"
                         sh "docker rm converto-live || true"
+                        sh "docker rmi ${DOCKER_IMAGE}:latest || true"
                         
-                        // Run new container
-                        sh "docker run -d --name converto-live -p 3000:3000 ${DOCKER_IMAGE}:${DOCKER_TAG}"
+                        // Run new container with restart policy
+                        sh "docker run -d --name converto-live --restart unless-stopped -p 3000:3000 ${DOCKER_IMAGE}:${DOCKER_TAG}"
+                        
+                        // Wait for container to be ready
+                        sh "sleep 10"
+                        sh "docker logs converto-live"
                         
                         // Start ngrok tunnel
                         sh "chmod +x scripts/ngrok-deploy.sh"
@@ -139,12 +149,17 @@ pipeline {
                         bat "docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} ."
                         bat "docker tag ${DOCKER_IMAGE}:${DOCKER_TAG} ${DOCKER_IMAGE}:latest"
                         
-                        // Stop previous container
+                        // Force stop and remove previous container
                         bat "docker stop converto-live || exit 0"
                         bat "docker rm converto-live || exit 0"
+                        bat "docker rmi ${DOCKER_IMAGE}:latest || exit 0"
                         
-                        // Run new container
-                        bat "docker run -d --name converto-live -p 3000:3000 ${DOCKER_IMAGE}:${DOCKER_TAG}"
+                        // Run new container with restart policy
+                        bat "docker run -d --name converto-live --restart unless-stopped -p 3000:3000 ${DOCKER_IMAGE}:${DOCKER_TAG}"
+                        
+                        // Wait for container to be ready
+                        bat "timeout /t 10 /nobreak"
+                        bat "docker logs converto-live"
                         
                         // Start ngrok tunnel (PowerShell)
                         bat "powershell -ExecutionPolicy Bypass -File scripts\\ngrok-deploy.ps1"
