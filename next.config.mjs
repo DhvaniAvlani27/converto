@@ -1,5 +1,5 @@
 /** @type {import('next').NextConfig} */
-const nextConfig = { //Wha is this 
+const nextConfig = {
   output: 'standalone',
   experimental: { 
     outputFileTracingRoot: undefined,
